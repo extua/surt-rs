@@ -1,0 +1,13 @@
+[package]
+name = "surt-rs-py"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "surt_rs_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = "0.21.1"
+surt-rs = "0.1.3"
