@@ -1,0 +1,7 @@
+{
+  "name": "@mijho/surt-rs",
+  "version": "0.1.3",
+  "exports": {
+    "./deno": "./deno/surt_rs_js.js"
+  }
+}

@@ -1,0 +1,75 @@
+#! /usr/bin/env bash
+rm -rf tmp_build pkg
+mkdir -p tmp_build
+
+if [ "$ENV" == "DEV" ]; then
+  BUILD="--dev"
+  FLAGS="--features debug"
+else
+  BUILD="--release"
+  FLAGS=""
+fi
+
+# # Build node version into tmp_build/node
+echo "Building node"
+wasm-pack build \
+  $BUILD \
+  --out-dir tmp_build/node \
+  --target nodejs \
+  $FLAGS &
+[ -n "$CI" ] && wait;
+
+# Build web version into tmp_build/esm
+echo "Building esm"
+wasm-pack build \
+  $BUILD \
+  --out-dir tmp_build/esm \
+  --target web \
+  $FLAGS &
+[ -n "$CI" ] && wait;
+
+
+# Build bundler version into tmp_build/bundler
+echo "Building bundler"
+wasm-pack build \
+  $BUILD \
+  --out-dir tmp_build/bundler \
+  --target bundler \
+  $FLAGS &
+[ -n "$CI" ] && wait;
+
+# Build web version into tmp_build/deno
+echo "Building deno"
+wasm-pack build \
+  $BUILD \
+  --out-dir tmp_build/deno \
+  --target deno \
+  $FLAGS &
+wait
+
+
+# Copy files into pkg/
+mkdir -p pkg/{node,esm,bundler,deno}
+
+cp tmp_build/bundler/surt_rs_js* pkg/bundler/
+cp tmp_build/esm/surt_rs_js* pkg/esm
+cp tmp_build/node/surt_rs_js* pkg/node
+cp -v tmp_build/deno/surt_rs_js* pkg/deno
+
+# cp tmp_build/bundler/{LICENSE,README.md} pkg/
+
+# # Copy in combined package.json from template
+# # https://stackoverflow.com/a/24904276
+# # Note that keys from the second file will overwrite keys from the first.
+# jq -s '.[0] * .[1]' templates/package.json tmp_build/bundler/package.json > pkg/package.json
+
+# # Create minimal package.json in esm/ folder with type: module
+# echo '{"type": "module"}' > pkg/esm/package.json
+
+# # Update files array in package.json using JQ
+# jq '.files = ["*"] | .module="esm/surt_rs_js_wasm.js" | .types="esm/surt_rs_js_wasm.d.ts"' pkg/package.json > pkg/package.json.tmp
+
+# # Overwrite existing package.json file
+# mv pkg/package.json.tmp pkg/package.json
+
+rm -rf tmp_build
